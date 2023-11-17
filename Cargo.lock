@@ -482,7 +482,6 @@ name = "example_coinbase_codegen"
 version = "0.1.0"
 dependencies = [
  "fefix",
- "rust_decimal",
 ]
 
 [[package]]
