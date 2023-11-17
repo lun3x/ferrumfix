@@ -21,7 +21,7 @@ fn main() -> io::Result<()> {
 
 fn coinbase_fix_dictionary() -> io::Result<Dictionary> {
     let quickfix_spec = {
-        let path = project_root().join("src").join("coinbase_quickfix.xml");
+        let path = project_root().join("src").join("FIXT11-prod-sand.xml");
         std::fs::read_to_string(path)?
     };
     Ok(Dictionary::from_quickfix_spec(quickfix_spec).expect("Invalid specs."))
