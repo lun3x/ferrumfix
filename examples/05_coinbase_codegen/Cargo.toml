@@ -5,7 +5,9 @@ edition = "2021"
 build = "build.rs"
 
 [dependencies]
-fefix = { path = "../../crates/fefix" }
+fefix = { path = "../../crates/fefix", default-features = false, features = [
+    "fix50sp2",
+] }
 
 [build-dependencies]
 fefix = { path = "../../crates/fefix", features = ["codegen"] }
