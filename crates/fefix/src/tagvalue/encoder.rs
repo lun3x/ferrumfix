@@ -34,22 +34,10 @@ impl Encoder {
         Self::default()
     }
 
-    pub fn start_message<'a, B>(
-        &'a mut self,
-        begin_string: &[u8],
-        buffer: &'a mut B,
-        msg_type: &[u8],
-    ) -> EncoderHandle<'a, B>
-    where
-        B: Buffer,
-    {
-        self.start_message_with_body_len_buf::<B, 8>(begin_string, buffer, msg_type)
-    }
-
     /// Creates a new [`EncoderHandle`] that allows to set the field values of a
     /// new FIX message. The raw byte contents of the newly created FIX messages
     /// are appended directly at the end of `buffer`.
-    pub fn start_message_with_body_len_buf<'a, B, const N: usize>(
+    pub fn start_message<'a, B>(
         &'a mut self,
         begin_string: &[u8],
         buffer: &'a mut B,
@@ -81,7 +69,7 @@ impl Encoder {
         // some bytes but the benefits largely outweight the costs.
         //
         // Eight digits (~100MB) are enough for every message.
-        state.set(9, [0u8; N]);
+        state.set(9, b"00000000" as &[u8]);
         state.body_start_i = state.buffer.len();
         state.set(35, msg_type);
         state
