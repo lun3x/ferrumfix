@@ -86,7 +86,10 @@ slog = { version = "2", optional = true }
 strum = "0.24"
 strum_macros = "0.25"
 thiserror = "1"
-tokio-util = { version = "0.7", optional = true, features = ["codec", "compat"] }
+tokio-util = { version = "0.7", optional = true, features = [
+    "codec",
+    "compat",
+] }
 uuid = { version = "1", features = ["v4"] }
 
 [build-dependencies]
