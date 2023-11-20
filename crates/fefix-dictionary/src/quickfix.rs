@@ -292,7 +292,9 @@ fn import_layout_item(dict: &mut Dictionary, node: roxmltree::Node) -> ParseResu
 
 fn import_category(dict: &mut Dictionary, node: roxmltree::Node) -> ParseResult<()> {
     debug_assert_eq!(node.tag_name().name(), "message");
-    let name = node.attribute("msgcat").ok_or(ParseError::InvalidFormat)?;
+    let Some(name) = node.attribute("msgcat") else {
+        return Ok(())
+    };
 
     if dict.category_by_name(name).is_none() {
         dict.add_category(CategoryData {
