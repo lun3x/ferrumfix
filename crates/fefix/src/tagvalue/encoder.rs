@@ -126,15 +126,19 @@ where
 
         let body_length = self.body_length();
         let body_length_range = self.body_length_writable_range();
-        let body_len_digits = (body_length.checked_ilog10().unwrap_or(0) + 1) as usize;
+
         let mut slice = &mut self.buffer.as_mut_slice()[body_length_range];
         write!(slice, "{:08}", body_length).unwrap();
-        self.buffer.as_mut_slice().copy_within(
-            self.body_start_i - body_len_digits - 1..,
-            self.body_start_i - 9,
-        );
-        self.buffer
-            .resize(self.buffer.len() - (8 - body_len_digits), 0)
+
+        if self.encoder.config().trim_leading_zeroes {
+            let body_len_digits = (body_length.checked_ilog10().unwrap_or(0) + 1) as usize;
+            self.buffer.as_mut_slice().copy_within(
+                self.body_start_i - body_len_digits - 1..,
+                self.body_start_i - 9,
+            );
+            self.buffer
+                .resize(self.buffer.len() - (8 - body_len_digits), 0)
+        }
     }
 
     fn write_checksum(&mut self) {

@@ -22,6 +22,10 @@ pub struct Config {
     /// Determines whether or not the decoder needs to have access to
     /// associative FIX fields. If turned off, only linear access is possible.
     pub should_decode_associative: bool,
+    /// Determines whether or not the encoder should trim leading zeroes from BodyLength field.
+    ///
+    /// This setting has no effect when decoding FIX messages.
+    pub trim_leading_zeroes: bool,
 }
 
 impl Default for Config {
@@ -31,6 +35,7 @@ impl Default for Config {
             max_message_size: Some(DEFAULT_MAX_MESSAGE_SIZE),
             verify_checksum: true,
             should_decode_associative: true,
+            trim_leading_zeroes: false,
         }
     }
 }
