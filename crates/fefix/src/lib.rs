@@ -227,16 +227,34 @@ pub trait StreamingDecoder {
 
     /// Provides a lower bound on the number of bytes that are required to reach the end of the
     /// current message.
-    fn num_bytes_required(&self) -> usize;
+    // fn num_bytes_required(&self) -> usize;
+
+    /// Provides the number of bytes in the buffer that have been filled
+    // fn get_bytes_filled(&self) -> usize;
+
+    // /// Sets the number of bytes that have been filled
+    // fn set_bytes_filled(&self, bytes: usize);
 
     /// Provides a buffer that must be filled before re-attempting to deserialize
     /// the next message. The slice is *guaranteed* to be non-empty.
-    fn fillable(&mut self) -> &mut [u8] {
-        let len = self.buffer().len();
-        let num_bytes_required = self.num_bytes_required();
-        self.buffer().resize(num_bytes_required, 0);
-        &mut self.buffer().as_mut_slice()[len..]
-    }
+    // fn fillable(&mut self) -> &mut [u8] {
+    //     let len = self.buffer().len();
+    //     let num_bytes_required = self.num_bytes_required();
+    //     self.buffer().resize(num_bytes_required, 0);
+    //     &mut self.buffer().as_mut_slice()[len..]
+    // }
+
+    // fn fill(&mut self, f: impl FnOnce(&mut [u8]) -> usize) {
+    //     let len = self.buffer().len();
+    //     let num_bytes_filled = self.num_bytes_filled();
+    //     let num_bytes_required = self.num_bytes_required();
+    //     self.buffer().resize(num_bytes_required, 0);
+    //     let fillable = &mut self.buffer().as_mut_slice()[num_bytes_filled..num_bytes_required];
+    //     let want_filled = num_bytes_required - num_bytes_filled;
+    //     let filled = f(fillable);
+    // }
+
+    fn fill(&mut self, f: impl FnOnce(&mut [u8]) -> usize);
 
     /// Attempts to parse the contents available in the internal [`Buffer`]. The return value gives
     /// you information about the state of the decoder:

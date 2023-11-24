@@ -162,6 +162,7 @@ impl<C> GetConfig for RawDecoder<C> {
 enum ParserState {
     Empty,
     Header(HeaderInfo, usize),
+    PartialBody(usize),
     Failed,
 }
 
@@ -189,14 +190,6 @@ where
         self.state = ParserState::Empty;
     }
 
-    fn num_bytes_required(&self) -> usize {
-        match self.state {
-            ParserState::Empty => utils::MIN_FIX_MESSAGE_LEN_IN_BYTES,
-            ParserState::Header(_, expected_len) => expected_len,
-            ParserState::Failed => 0,
-        }
-    }
-
     fn try_parse(&mut self) -> Result<Option<()>, Self::Error> {
         match self.state {
             ParserState::Empty => {
@@ -215,8 +208,18 @@ where
                 }
             }
             ParserState::Header(_, _) => Ok(Some(())),
+            ParserState::PartialBody(_) => Ok(None),
             ParserState::Failed => panic!("Failed state"),
         }
+    }
+
+    fn fill(&mut self, f: impl FnOnce(&mut [u8]) -> usize) {
+        let len = self.buffer().len();
+        let num_bytes_required = self.num_bytes_required();
+        self.buffer().resize(num_bytes_required, 0);
+        let fillable = &mut self.buffer().as_mut_slice()[num_bytes_filled..num_bytes_required];
+        let want_filled = num_bytes_required - num_bytes_filled;
+        let filled = f(fillable);
     }
 }
 
@@ -224,6 +227,15 @@ impl<B> RawDecoderStreaming<B>
 where
     B: Buffer,
 {
+    fn num_bytes_required(&self) -> usize {
+        match self.state {
+            ParserState::Empty => utils::MIN_FIX_MESSAGE_LEN_IN_BYTES,
+            ParserState::Header(_, expected_len) => expected_len,
+            ParserState::PartialBody(needs) => needs,
+            ParserState::Failed => 0,
+        }
+    }
+
     /// Tries to deserialize the next [`RawFrame`] from the internal buffer. If
     /// the internal buffer does not contain a complete message, returns an
     /// [`Ok(None)`].
