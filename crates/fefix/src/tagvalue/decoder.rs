@@ -228,14 +228,16 @@ impl Decoder {
             .unwrap();
         let fix_type = self.tag_lookup.get(&tag.get());
         if fix_type == Some(&FixDatatype::NumInGroup) {
-            self.builder
-                .state
-                .add_group(tag, self.builder.field_locators.len() - 1, field_value);
+            self.builder.state.add_group(
+                tag,
+                self.builder.raw_field_locators.len() - 1,
+                field_value,
+            );
         } else if fix_type == Some(&FixDatatype::Length) {
             // FIXME
-            let last_field_locator = self.builder.field_locators.last().unwrap();
-            let last_field = self.builder.fields.get(last_field_locator).unwrap();
-            let last_field_value = last_field.1;
+            let last_raw_field_locator = self.builder.raw_field_locators.last().unwrap();
+            let last_field_value = &self.builder.bytes[last_raw_field_locator.offset as usize..]
+                [..last_raw_field_locator.len as usize];
             let s = std::str::from_utf8(last_field_value).unwrap();
             let data_field_length = str::parse(s).unwrap();
             self.builder.state.data_field_length = Some(data_field_length);
