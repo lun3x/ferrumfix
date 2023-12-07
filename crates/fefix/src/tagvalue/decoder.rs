@@ -26,6 +26,13 @@ struct FieldLocator {
 }
 
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+struct RawFieldLocator {
+    pub tag: TagU32,
+    pub offset: u16,
+    pub len: u16,
+}
+
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 enum FieldLocatorContext {
     TopLevel,
     WithinGroup {
@@ -212,6 +219,11 @@ impl Decoder {
                 tag,
                 &raw_message[field_value_start..][..field_value_len],
                 config_assoc,
+                RawFieldLocator {
+                    tag,
+                    offset: field_value_start as u16,
+                    len: field_value_len as u16,
+                },
             )
             .unwrap();
         let fix_type = self.tag_lookup.get(&tag.get());
@@ -514,6 +526,7 @@ struct MessageBuilder<'a> {
     raw: &'a [u8],
     fields: HashMap<FieldLocator, (TagU32, &'a [u8], usize)>,
     field_locators: Vec<FieldLocator>,
+    raw_field_locators: Vec<RawFieldLocator>,
     i_first_cell: usize,
     i_last_cell: usize,
     len_end_header: usize,
@@ -532,6 +545,7 @@ impl<'a> Default for MessageBuilder<'a> {
             },
             raw: b"",
             field_locators: Vec::new(),
+            raw_field_locators: Vec::new(),
             fields: HashMap::new(),
             i_first_cell: 0,
             i_last_cell: 0,
@@ -553,13 +567,17 @@ impl<'a> MessageBuilder<'a> {
         tag: TagU32,
         field_value: &'a [u8],
         associative: bool,
+        raw_field_locator: RawFieldLocator,
     ) -> Result<(), DecodeError> {
-        let field_locator = self.state.current_field_locator(tag);
-        let i = self.field_locators.len();
         if associative {
+            let i = self.field_locators.len();
+            let field_locator = self.state.current_field_locator(tag);
             self.fields.insert(field_locator, (tag, field_value, i));
+            self.field_locators.push(field_locator);
         }
-        self.field_locators.push(field_locator);
+
+        self.raw_field_locators.push(raw_field_locator);
+
         Ok(())
     }
 }
@@ -586,10 +604,10 @@ impl<'a, T> Iterator for Fields<'a, T> {
         if self.i == self.message.len() {
             None
         } else {
-            let context = self.message.builder.field_locators[self.i];
-            let field = self.message.builder.fields.get(&context).unwrap();
+            let context = self.message.builder.raw_field_locators[self.i];
+            let field = &self.message.as_bytes()[context.offset as usize..][..context.len as usize];
             self.i += 1;
-            Some((field.0, field.1))
+            Some((context.tag, field))
         }
     }
 }
