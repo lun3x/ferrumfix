@@ -236,7 +236,7 @@ impl Decoder {
         } else if fix_type == Some(&FixDatatype::Length) {
             // FIXME
             let last_raw_field_locator = self.builder.raw_field_locators.last().unwrap();
-            let last_field_value = &self.builder.bytes[last_raw_field_locator.offset as usize..]
+            let last_field_value = &raw_message[last_raw_field_locator.offset as usize..]
                 [..last_raw_field_locator.len as usize];
             let s = std::str::from_utf8(last_field_value).unwrap();
             let data_field_length = str::parse(s).unwrap();
@@ -528,7 +528,6 @@ impl DecoderState {
 #[derive(Debug, Clone)]
 struct MessageBuilder<'a> {
     state: DecoderState,
-    raw: &'a [u8],
     fields: HashMap<FieldLocator, (TagU32, &'a [u8], usize)>,
     field_locators: Vec<FieldLocator>,
     raw_field_locators: Vec<RawFieldLocator>,
@@ -548,7 +547,6 @@ impl<'a> Default for MessageBuilder<'a> {
                 new_group: None,
                 data_field_length: None,
             },
-            raw: b"",
             field_locators: Vec::new(),
             raw_field_locators: Vec::new(),
             fields: HashMap::new(),
