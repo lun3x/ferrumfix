@@ -444,7 +444,10 @@ impl<'a, T> Message<'a, T> {
     /// assert_eq!(message.len(), message.fields().count());
     /// ```
     pub fn len(&self) -> usize {
-        self.builder.field_locators.len()
+        std::cmp::max(
+            self.builder.field_locators.len(),
+            self.builder.raw_field_locators.len(),
+        )
     }
 }
 
